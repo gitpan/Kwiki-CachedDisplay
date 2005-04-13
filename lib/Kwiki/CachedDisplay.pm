@@ -1,45 +1,29 @@
 package Kwiki::CachedDisplay;
 use Kwiki::Plugin -Base;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 const class_id => 'cached_display';
 
 sub register {
     my $reg = shift;
-    $reg->add(hook => 'page:to_html', pre => 'load_cached_html');
-    $reg->add(hook => 'page:store',  post => 'store_cached_html');
+    $reg->add(hook => 'display:display', pre  => 'check_cached');
 }
 
-sub generate_html {
-    my $page = shift;
-    $self->hub->formatter->text_to_html($page->content);
-}
-
-sub cache_logic {
-    my ($page,$update) = @_;
-    my $html = io->catfile($self->plugin_directory,$page->id)->utf8->assert;
-    my $return;
-    unless($html->exists && !$update) {
-        $return = $self->hub->formatter->text_to_html($page->content);
-        $html->print($return);
-    }
-    return $return || $html->all;
-}
-
-sub load_cached_html {
+sub check_cached {
     my $hook = pop;
     my $display = $self;
     $self = $display->hub->cached_display;
     my $page = $self->pages->current;
-    if($page->exists) {
-        $hook->cancel;
-        return $self->cache_logic($page);
+    my $html = io->catfile($self->plugin_directory,$page->id)->utf8;
+    my $content;
+    if(!$html->exists || ($page->modified_time > $html->mtime)) {
+        my $code = $hook->code;
+        $content = $code->($display);
+        $html->print($content);
     }
-}
-
-sub store_cached_html {
-    # $self is 'page' in this sub
-    $self->hub->cached_display->cache_logic($self,"UPDATE");
+    $content ||= $html->all;
+    $hook->cancel;
+    return $content;
 }
 
 __END__
