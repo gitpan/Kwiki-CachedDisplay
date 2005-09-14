@@ -1,0 +1,10 @@
+version: 0.05
+date:    Wed Sep 14 14:06:48 CST 2005
+changes:
+- Fix server error due to 0.04
+---
+version: 0.04
+date:    Tue May 31 07:49:56 CST 2005
+changes:
+- Add an ignore list in config
+

@@ -1,6 +1,6 @@
 package Kwiki::CachedDisplay;
 use Kwiki::Plugin -Base;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 const class_id => 'cached_display';
 
@@ -15,7 +15,8 @@ sub check_cached {
     $self = $display->hub->cached_display;
     my $page = $self->pages->current;
     return unless $page->exists;
-    return if(grep {$page->id} @{$self->config->cached_display_ignore||[]});
+    return if(grep {$page->id}
+        @{eval'$self->config->cached_display_ignore'||[]});
     my $html = io->catfile($self->plugin_directory,$page->id)->utf8;
     my $content;
     if(!$html->exists || ($page->modified_time > $html->mtime)) {
