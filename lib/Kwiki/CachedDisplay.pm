@@ -1,6 +1,6 @@
 package Kwiki::CachedDisplay;
 use Kwiki::Plugin -Base;
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 const class_id => 'cached_display';
 
@@ -15,11 +15,22 @@ sub check_cached {
     $self = $display->hub->cached_display;
     my $page = $self->pages->current;
     return unless $page->exists;
-    return if(grep {$page->id}
-        @{eval'$self->config->cached_display_ignore'||[]});
+    return if (defined $self->config->can('cached_display_ignore') and
+	       grep {$page->id} @{$self->config->cached_display_ignore});
     my $html = io->catfile($self->plugin_directory,$page->id)->utf8;
     my $content;
-    if(!$html->exists || ($page->modified_time > $html->mtime)) {
+
+    my $depup = 0;
+    if (defined $self->config->can('cached_display_dependencies')){
+	for (@{$self->config->cached_display_dependencies}){
+	    my $deppage = $self->pages->new_page($_);
+	    $depup = 1 if $deppage->modified_time > $html->mtime;
+	}
+    }
+
+    if($depup or
+       !$html->exists or
+       ($page->modified_time > $html->mtime)) {
         my $code = $hook->code;
         $content = $code->($display);
         $html->print($content);
@@ -59,6 +70,31 @@ For example:
     - HomePage
 
 That would simply not cache SandBox and HomePage.
+
+If you want to flush the cache if on the condition that one specific page in
+the setup has changed, you can define the names of these special pages in
+
+    cached_display_dependencies:
+    - KwikiNavBar
+
+This would mean that the cache would be invalidated whenever the KwikiNavBar
+page is changed.
+
+=head1 METHODS
+
+=over
+
+=item register
+
+Kwiki Plugin registration routine.
+
+=item check_cached
+
+A pre hook routine of the display method in your display class (In most cases,
+it is Kwiki::Display::display.) It checked whether the cache of the requested
+page are out-of-dated or not, and regenerate it on necessary.
+
+=back
 
 =head1 COPYRIGHT
 
