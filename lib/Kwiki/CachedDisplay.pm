@@ -1,6 +1,6 @@
 package Kwiki::CachedDisplay;
 use Kwiki::Plugin -Base;
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 const class_id => 'cached_display';
 

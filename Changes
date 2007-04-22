@@ -1,3 +1,9 @@
+version: 0.07
+date:    Sun Apr 22 17:23:23 CST 2007
+changes:
+- Improve Kwalitee
+- Regenerate inc/
+----
 version: 0.06
 date:    Mon Nov 14 21:02:40 CST 2005
 changes:
